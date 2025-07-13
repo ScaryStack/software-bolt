@@ -20,15 +20,21 @@ const Reports: React.FC<ReportsProps> = ({ user }) => {
   // Obtener datos desde localStorage para reflejar cambios en tiempo real
   const getReportData = () => {
     const vehicles = JSON.parse(localStorage.getItem('vehicles') || '[]');
+    const touristVehicles = JSON.parse(localStorage.getItem('tourist_vehicles') || '[]');
+    const allVehicles = [...vehicles, ...touristVehicles];
+    
     const declarations = JSON.parse(localStorage.getItem('declarations') || '[]');
+    
     const minors = JSON.parse(localStorage.getItem('minors') || '[]');
+    const touristMinors = JSON.parse(localStorage.getItem('tourist_minors') || '[]');
+    const allMinors = [...minors, ...touristMinors];
 
     return {
       vehicles: {
-        total: vehicles.length,
-        approved: vehicles.filter((v: any) => v.status === 'approved').length,
-        rejected: vehicles.filter((v: any) => v.status === 'rejected').length,
-        pending: vehicles.filter((v: any) => v.status === 'pending').length
+        total: allVehicles.length,
+        approved: allVehicles.filter((v: any) => v.status === 'approved').length,
+        rejected: allVehicles.filter((v: any) => v.status === 'rejected').length,
+        pending: allVehicles.filter((v: any) => v.status === 'pending').length
       },
       declarations: {
         total: declarations.length,
@@ -37,14 +43,14 @@ const Reports: React.FC<ReportsProps> = ({ user }) => {
         pending: declarations.filter((d: any) => d.status === 'pending').length
       },
       minors: {
-        total: minors.length,
-        complete: minors.filter((m: any) => m.status === 'complete').length,
-        incomplete: minors.filter((m: any) => m.status === 'incomplete').length
+        total: allMinors.length,
+        complete: allMinors.filter((m: any) => m.status === 'complete').length,
+        incomplete: allMinors.filter((m: any) => m.status === 'incomplete').length
       },
       issues: [
-        { type: 'Documentos incompletos', count: minors.filter((m: any) => m.status === 'incomplete').length, category: 'menores' },
+        { type: 'Documentos incompletos', count: allMinors.filter((m: any) => m.status === 'incomplete').length, category: 'menores' },
         { type: 'Declaraciones pendientes', count: declarations.filter((d: any) => d.status === 'pending').length, category: 'declaraciones' },
-        { type: 'Vehículos pendientes', count: vehicles.filter((v: any) => v.status === 'pending').length, category: 'vehículos' }
+        { type: 'Vehículos pendientes', count: allVehicles.filter((v: any) => v.status === 'pending').length, category: 'vehículos' }
       ]
     };
   };
@@ -87,20 +93,25 @@ const Reports: React.FC<ReportsProps> = ({ user }) => {
 
       // Hoja 2: Vehículos Detallados
       const vehicles = JSON.parse(localStorage.getItem('vehicles') || '[]');
+      const touristVehicles = JSON.parse(localStorage.getItem('tourist_vehicles') || '[]');
+      const allVehicles = [...vehicles, ...touristVehicles];
+      
       const vehicleData = [
         ['DETALLE DE VEHÍCULOS'],
         [''],
         ['Patente', 'Tipo', 'Propietario', 'Estado', 'Fecha', 'Documentos']
       ];
       
-      vehicles.forEach((vehicle: any) => {
+      allVehicles.forEach((vehicle: any) => {
         vehicleData.push([
           vehicle.plate,
           vehicle.type,
           vehicle.owner,
           vehicle.status === 'approved' ? 'Aprobado' : vehicle.status === 'rejected' ? 'Rechazado' : 'Pendiente',
           new Date(vehicle.date).toLocaleDateString('es-CL'),
-          vehicle.documents?.join(', ') || 'Sin documentos'
+          Array.isArray(vehicle.documents) ? vehicle.documents.join(', ') : 
+          (vehicle.documents && typeof vehicle.documents === 'object' ? 
+            Object.values(vehicle.documents).filter(Boolean).join(', ') : 'Sin documentos')
         ]);
       });
 
@@ -131,20 +142,25 @@ const Reports: React.FC<ReportsProps> = ({ user }) => {
 
       // Hoja 4: Menores Detallados
       const minors = JSON.parse(localStorage.getItem('minors') || '[]');
+      const touristMinors = JSON.parse(localStorage.getItem('tourist_minors') || '[]');
+      const allMinors = [...minors, ...touristMinors];
+      
       const minorData = [
         ['DETALLE DE MENORES'],
         [''],
         ['Nombre', 'Edad', 'Tutor', 'Estado', 'Fecha', 'Documentos']
       ];
       
-      minors.forEach((minor: any) => {
+      allMinors.forEach((minor: any) => {
         minorData.push([
-          minor.name,
+          minor.name || minor.fullName,
           minor.age,
           minor.guardian,
           minor.status === 'complete' ? 'Completo' : 'Incompleto',
           new Date(minor.date).toLocaleDateString('es-CL'),
-          minor.documents.join(', ')
+          Array.isArray(minor.documents) ? minor.documents.join(', ') : 
+          (minor.documents && typeof minor.documents === 'object' ? 
+            Object.values(minor.documents).filter(Boolean).join(', ') : 'Sin documentos')
         ]);
       });
 

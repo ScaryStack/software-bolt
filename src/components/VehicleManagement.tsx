@@ -24,9 +24,39 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ user }) => {
 
   // Cargar datos desde localStorage al inicializar
   useEffect(() => {
-    const savedVehicles = localStorage.getItem('vehicles');
-    if (savedVehicles) {
-      setVehicleList(JSON.parse(savedVehicles));
+    const savedVehicles = localStorage.getItem('vehicles') || '[]';
+    const savedTouristVehicles = localStorage.getItem('tourist_vehicles') || '[]';
+    
+    const adminVehicles = JSON.parse(savedVehicles);
+    const touristVehicles = JSON.parse(savedTouristVehicles);
+    
+    // Convertir vehículos de turistas al formato administrativo
+    const convertedTouristVehicles = touristVehicles.map((tv: any) => ({
+      id: tv.id,
+      plate: tv.plate,
+      type: tv.type,
+      owner: tv.owner,
+      status: tv.status,
+      date: tv.date,
+      documents: Object.entries(tv.documents || {})
+        .filter(([_, value]) => value)
+        .map(([key, value]) => {
+          const labels = {
+            circulationPermit: 'Permiso de circulación',
+            driverLicense: 'Licencia de conducir',
+            idCard: 'Cédula de identidad',
+            soap: 'SOAP',
+            vehicleRegistry: 'Padrón de vehículo'
+          };
+          return labels[key as keyof typeof labels] || key;
+        })
+    }));
+    
+    // Combinar ambas listas
+    const allVehicles = [...adminVehicles, ...convertedTouristVehicles];
+    
+    if (allVehicles.length > 0) {
+      setVehicleList(allVehicles);
     } else {
       // Datos iniciales si no hay datos guardados
       const initialVehicles = [
@@ -59,13 +89,16 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ user }) => {
         }
       ];
       setVehicleList(initialVehicles);
-      localStorage.setItem('vehicles', JSON.stringify(initialVehicles));
     }
   }, []);
 
   // Guardar en localStorage cuando cambie la lista
   useEffect(() => {
-    localStorage.setItem('vehicles', JSON.stringify(vehicleList));
+    // Solo guardar vehículos administrativos (no los de turistas)
+    const adminVehicles = vehicleList.filter(vehicle => 
+      !vehicle.id.includes('USER_') && !vehicle.id.includes('TUR001')
+    );
+    localStorage.setItem('vehicles', JSON.stringify(adminVehicles));
   }, [vehicleList]);
 
   // Filter vehicles based on user role
@@ -88,11 +121,23 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ user }) => {
   });
 
   const updateStatus = (id: string, status: 'approved' | 'rejected') => {
-    setVehicleList(prev => 
-      prev.map(vehicle => 
+    setVehicleList(prev => {
+      const updatedList = prev.map(vehicle => 
         vehicle.id === id ? { ...vehicle, status } : vehicle
-      )
-    );
+      );
+      
+      // Si es un vehículo de turista, actualizar en tourist_vehicles
+      const vehicleToUpdate = prev.find(v => v.id === id);
+      if (vehicleToUpdate && vehicleToUpdate.id.includes('USER_')) {
+        const touristVehicles = JSON.parse(localStorage.getItem('tourist_vehicles') || '[]');
+        const updatedTouristVehicles = touristVehicles.map((tv: any) => 
+          tv.id === id ? { ...tv, status } : tv
+        );
+        localStorage.setItem('tourist_vehicles', JSON.stringify(updatedTouristVehicles));
+      }
+      
+      return updatedList;
+    });
   };
 
   const handleAddVehicle = (e: React.FormEvent) => {

@@ -22,9 +22,36 @@ const MinorManagement: React.FC<MinorManagementProps> = ({ user }) => {
 
   // Cargar datos desde localStorage al inicializar
   useEffect(() => {
-    const savedMinors = localStorage.getItem('minors');
-    if (savedMinors) {
-      setMinorList(JSON.parse(savedMinors));
+    const savedMinors = localStorage.getItem('minors') || '[]';
+    const savedTouristMinors = localStorage.getItem('tourist_minors') || '[]';
+    
+    const adminMinors = JSON.parse(savedMinors);
+    const touristMinors = JSON.parse(savedTouristMinors);
+    
+    // Convertir menores de turistas al formato administrativo
+    const convertedTouristMinors = touristMinors.map((tm: any) => ({
+      id: tm.id,
+      name: tm.fullName,
+      age: tm.age,
+      guardian: tm.guardian,
+      status: tm.status,
+      date: tm.date,
+      documents: Object.entries(tm.documents || {})
+        .filter(([_, value]) => value)
+        .map(([key, value]) => {
+          const labels = {
+            idCard: 'Cédula de identidad',
+            notarialAuthorization: 'Autorización notarial'
+          };
+          return labels[key as keyof typeof labels] || key;
+        })
+    }));
+    
+    // Combinar ambas listas
+    const allMinors = [...adminMinors, ...convertedTouristMinors];
+    
+    if (allMinors.length > 0) {
+      setMinorList(allMinors);
     } else {
       // Datos iniciales si no hay datos guardados
       const initialMinors = [
@@ -48,13 +75,16 @@ const MinorManagement: React.FC<MinorManagementProps> = ({ user }) => {
         }
       ];
       setMinorList(initialMinors);
-      localStorage.setItem('minors', JSON.stringify(initialMinors));
     }
   }, []);
 
   // Guardar en localStorage cuando cambie la lista
   useEffect(() => {
-    localStorage.setItem('minors', JSON.stringify(minorList));
+    // Solo guardar menores administrativos (no los de turistas)
+    const adminMinors = minorList.filter(minor => 
+      !minor.id.includes('USER_') && !minor.id.includes('TUR001')
+    );
+    localStorage.setItem('minors', JSON.stringify(adminMinors));
   }, [minorList]);
 
   // Filter minors based on user role
