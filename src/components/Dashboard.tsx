@@ -8,6 +8,8 @@ import MinorManagement from './MinorManagement';
 import QuickAccessMenu from './QuickAccessMenu';
 import TouristVehicleManagement from './TouristVehicleManagement';
 import TouristMinorManagement from './TouristMinorManagement';
+import TouristOverview from './TouristOverview';
+import AdminTrafficCharts from './AdminTrafficCharts';
 
 interface DashboardProps {
   user: UserType;
@@ -50,6 +52,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: BarChart3, permissions: ['validate', 'admin'] },
+    { id: 'tourist-overview', label: 'Mi Resumen', icon: BarChart3, permissions: ['declarations', 'upload'] },
     { id: 'tourist-vehicles', label: 'Mis Vehículos', icon: Car, permissions: ['declarations', 'upload'] },
     { id: 'tourist-minors', label: 'Menores a Cargo', icon: Users, permissions: ['declarations', 'upload'] },
     { id: 'vehicles', label: 'Vehículos', icon: Car, permissions: ['validate', 'vehicles', 'admin'] },
@@ -64,6 +67,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'tourist-overview':
+        return <TouristOverview user={user} onTabChange={setActiveTab} />;
       case 'tourist-vehicles':
         return <TouristVehicleManagement user={user} />;
       case 'tourist-minors':
@@ -79,6 +84,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       default:
         return (
           <div className="space-y-6">
+            {/* Admin Traffic Charts */}
+            {isAdmin && (
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Tránsito en Tiempo Real</h3>
+                <AdminTrafficCharts />
+              </div>
+            )}
+
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl p-6 text-white">
               <div className="flex items-center justify-between">
