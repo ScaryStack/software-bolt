@@ -6,6 +6,8 @@ import DeclarationManagement from './DeclarationManagement';
 import Reports from './Reports';
 import MinorManagement from './MinorManagement';
 import QuickAccessMenu from './QuickAccessMenu';
+import TouristVehicleManagement from './TouristVehicleManagement';
+import TouristMinorManagement from './TouristMinorManagement';
 
 interface DashboardProps {
   user: UserType;
@@ -48,6 +50,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: BarChart3, permissions: ['validate', 'admin'] },
+    { id: 'tourist-vehicles', label: 'Mis Vehículos', icon: Car, permissions: ['declarations', 'upload'] },
+    { id: 'tourist-minors', label: 'Menores a Cargo', icon: Users, permissions: ['declarations', 'upload'] },
     { id: 'vehicles', label: 'Vehículos', icon: Car, permissions: ['validate', 'vehicles', 'admin'] },
     { id: 'declarations', label: 'Declaraciones', icon: FileText, permissions: ['declarations', 'food_validation', 'pet_validation', 'admin'] },
     { id: 'minors', label: 'Menores', icon: Users, permissions: ['validate', 'admin'] },
@@ -60,6 +64,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'tourist-vehicles':
+        return <TouristVehicleManagement user={user} />;
+      case 'tourist-minors':
+        return <TouristMinorManagement user={user} />;
       case 'vehicles':
         return <VehicleManagement user={user} />;
       case 'declarations':

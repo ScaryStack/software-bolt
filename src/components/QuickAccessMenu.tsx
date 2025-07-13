@@ -38,6 +38,20 @@ const QuickAccessMenu: React.FC<QuickAccessMenuProps> = ({
       color: 'text-blue-600'
     },
     { 
+      id: 'tourist-vehicles', 
+      label: 'Mis Vehículos', 
+      icon: Car, 
+      permissions: ['declarations', 'upload'],
+      color: 'text-green-600'
+    },
+    { 
+      id: 'tourist-minors', 
+      label: 'Menores a Cargo', 
+      icon: Users, 
+      permissions: ['declarations', 'upload'],
+      color: 'text-purple-600'
+    },
+    { 
       id: 'vehicles', 
       label: 'Gestión de Vehículos', 
       icon: Car, 
